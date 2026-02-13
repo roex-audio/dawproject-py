@@ -242,6 +242,12 @@ class TestEnums:
         assert MixerRole.REGULAR.value == "regular"
         assert MixerRole.EFFECT_TRACK.value == "effect"
         assert MixerRole.SUB_MIX.value == "submix"
+        assert MixerRole.VCA.value == "vca"
+        # Aliases kept for backward compatibility
+        assert MixerRole.EFFECT.value == "effect"
+        assert MixerRole.SUBMIX.value == "submix"
+        assert MixerRole.EFFECT is MixerRole.EFFECT_TRACK
+        assert MixerRole.SUBMIX is MixerRole.SUB_MIX
 
     def test_unit_values(self):
         assert Unit.LINEAR.value == "linear"

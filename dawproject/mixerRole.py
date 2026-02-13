@@ -10,3 +10,7 @@ class MixerRole(Enum):
     EFFECT_TRACK = "effect"
     SUB_MIX = "submix"
     VCA = "vca"
+
+    # Aliases for backward compatibility (the short names also work)
+    EFFECT = "effect"
+    SUBMIX = "submix"
