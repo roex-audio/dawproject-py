@@ -25,11 +25,31 @@ class NoiseGate(BuiltInDevice):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.threshold = threshold
-        self.ratio = ratio
-        self.attack = attack
-        self.release = release
-        self.range = range_param
+        self.threshold = (
+            threshold
+            if isinstance(threshold, RealParameter)
+            else RealParameter(threshold)
+        )
+        self.ratio = (
+            ratio
+            if isinstance(ratio, RealParameter)
+            else RealParameter(ratio)
+        )
+        self.attack = (
+            attack
+            if isinstance(attack, RealParameter)
+            else RealParameter(attack)
+        )
+        self.release = (
+            release
+            if isinstance(release, RealParameter)
+            else RealParameter(release)
+        )
+        self.range = (
+            range_param
+            if isinstance(range_param, RealParameter)
+            else RealParameter(range_param)
+        )
 
     def to_xml(self):
         elem = super().to_xml()

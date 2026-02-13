@@ -25,11 +25,31 @@ class Limiter(BuiltInDevice):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.threshold = threshold
-        self.input_gain = input_gain
-        self.output_gain = output_gain
-        self.attack = attack
-        self.release = release
+        self.threshold = (
+            threshold
+            if isinstance(threshold, RealParameter)
+            else RealParameter(threshold)
+        )
+        self.input_gain = (
+            input_gain
+            if isinstance(input_gain, RealParameter)
+            else RealParameter(input_gain)
+        )
+        self.output_gain = (
+            output_gain
+            if isinstance(output_gain, RealParameter)
+            else RealParameter(output_gain)
+        )
+        self.attack = (
+            attack
+            if isinstance(attack, RealParameter)
+            else RealParameter(attack)
+        )
+        self.release = (
+            release
+            if isinstance(release, RealParameter)
+            else RealParameter(release)
+        )
 
     def to_xml(self):
         elem = super().to_xml()
