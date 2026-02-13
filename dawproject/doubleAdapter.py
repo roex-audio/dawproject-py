@@ -18,7 +18,7 @@ class DoubleAdapter:
         elif value == float("-inf"):
             return "-inf"
         else:
-            return f"{value:.6f}"
+            return str(float(value))
 
     @staticmethod
     def from_xml(value: str) -> float:

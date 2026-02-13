@@ -207,7 +207,7 @@ class TestArrangement:
 
 class TestDoubleAdapter:
     def test_to_xml_normal(self):
-        assert DoubleAdapter.to_xml(1.5) == "1.500000"
+        assert DoubleAdapter.to_xml(1.5) == "1.5"
 
     def test_to_xml_inf(self):
         assert DoubleAdapter.to_xml(float("inf")) == "inf"

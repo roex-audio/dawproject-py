@@ -43,7 +43,7 @@ class TestProjectSerialization:
         transport = root.find("Transport")
         assert transport is not None
         assert transport.find("Tempo") is not None
-        assert transport.find("Tempo").get("value") == "140.000000"
+        assert transport.find("Tempo").get("value") == "140.0"
         assert transport.find("TimeSignature").get("numerator") == "3"
 
     def test_project_with_structure(self):
@@ -97,7 +97,7 @@ class TestParameterSerialization:
         param = RealParameter(value=1.0, unit=Unit.LINEAR)
         elem = param.to_xml()
         assert elem.get("unit") == "linear"  # Not "LINEAR"
-        assert elem.get("value") == "1.000000"
+        assert elem.get("value") == "1.0"
 
     def test_real_parameter_bpm(self):
         param = RealParameter(value=120.0, unit=Unit.BPM)
@@ -112,8 +112,8 @@ class TestParameterSerialization:
     def test_real_parameter_with_range(self):
         param = RealParameter(value=440.0, unit=Unit.HERTZ, min_value=20.0, max_value=20000.0)
         elem = param.to_xml()
-        assert elem.get("min") == "20.000000"
-        assert elem.get("max") == "20000.000000"
+        assert elem.get("min") == "20.0"
+        assert elem.get("max") == "20000.0"
 
 
 class TestClipSerialization:
@@ -126,8 +126,8 @@ class TestClipSerialization:
         elem = clip.to_xml()
 
         assert elem.tag == "Clip"
-        assert elem.get("time") == "0.000000"
-        assert elem.get("duration") == "5.000000"
+        assert elem.get("time") == "0.0"
+        assert elem.get("duration") == "5.0"
 
         audio_elem = elem.find("Audio")
         assert audio_elem is not None
@@ -228,6 +228,6 @@ class TestRealPointSerialization:
         elem = pt.to_xml()
 
         assert elem.tag == "RealPoint"
-        assert elem.get("time") == "1.000000"
-        assert elem.get("value") == "0.500000"
+        assert elem.get("time") == "1.0"
+        assert elem.get("value") == "0.5"
         assert elem.get("interpolation") == "linear"
