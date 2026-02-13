@@ -18,12 +18,11 @@ class Warps(Timeline):
         super().__init__(**kwargs)
         self.events = events if events is not None else []
         self.content = content
-        self.content_time_unit = content_time_unit
+        self.content_time_unit = content_time_unit if content_time_unit is not None else TimeUnit.BEATS
 
     def to_xml(self):
         elem = super().to_xml()
-        if self.content_time_unit is not None:
-            elem.set("contentTimeUnit", self.content_time_unit.value)
+        elem.set("contentTimeUnit", self.content_time_unit.value)
         if self.content is not None:
             elem.append(self.content.to_xml())
         for warp in self.events:
@@ -53,8 +52,8 @@ class Warps(Timeline):
 
         content_time_unit_str = element.get("contentTimeUnit")
         try:
-            instance.content_time_unit = TimeUnit(content_time_unit_str) if content_time_unit_str else None
+            instance.content_time_unit = TimeUnit(content_time_unit_str) if content_time_unit_str else TimeUnit.BEATS
         except ValueError:
-            instance.content_time_unit = None
+            instance.content_time_unit = TimeUnit.BEATS
 
         return instance
