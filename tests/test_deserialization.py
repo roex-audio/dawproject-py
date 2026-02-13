@@ -286,6 +286,52 @@ class TestWarpsDeserialization:
         with pytest.raises(ValueError):
             Warps.from_xml(elem)
 
+    def test_parse_warps_with_audio_content(self):
+        xml = """
+        <Warps contentTimeUnit="seconds" timeUnit="beats">
+            <Audio duration="10.0" sampleRate="44100" channels="2" timeUnit="seconds">
+                <File path="audio.wav"/>
+            </Audio>
+            <Warp time="0.0" contentTime="0.0"/>
+            <Warp time="5.0" contentTime="5.0"/>
+        </Warps>
+        """
+        elem = ET.fromstring(xml)
+        warps = Warps.from_xml(elem)
+
+        assert warps.content_time_unit == TimeUnit.SECONDS
+        assert warps.time_unit == TimeUnit.BEATS
+        assert warps.content is not None
+        assert isinstance(warps.content, Audio)
+        assert warps.content.sample_rate == 44100
+        assert warps.content.file.path == "audio.wav"
+        assert len(warps.events) == 2
+        assert warps.events[0].time == 0.0
+        assert warps.events[0].content_time == 0.0
+        assert warps.events[1].time == 5.0
+        assert warps.events[1].content_time == 5.0
+
+    def test_parse_warps_without_content(self):
+        """Warps with only Warp elements and no content child."""
+        xml = """
+        <Warps contentTimeUnit="beats">
+            <Warp time="0.0" contentTime="0.0"/>
+        </Warps>
+        """
+        elem = ET.fromstring(xml)
+        warps = Warps.from_xml(elem)
+
+        assert warps.content is None
+        assert len(warps.events) == 1
+        assert warps.content_time_unit == TimeUnit.BEATS
+
+    def test_parse_warps_content_time_unit_values(self):
+        for unit_str, expected in [("beats", TimeUnit.BEATS), ("seconds", TimeUnit.SECONDS)]:
+            xml = f'<Warps contentTimeUnit="{unit_str}"><Warp time="0" contentTime="0"/></Warps>'
+            elem = ET.fromstring(xml)
+            warps = Warps.from_xml(elem)
+            assert warps.content_time_unit == expected
+
 
 class TestEqualizerDeserialization:
     def test_parse_equalizer(self):

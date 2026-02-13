@@ -5,7 +5,7 @@ from lxml import etree as ET
 from dawproject import (
     Project, Application, Transport, Track, Channel,
     Arrangement, Lanes, Clips, Clip, Audio, Notes, Note,
-    Markers, Marker, Points, RealPoint,
+    Markers, Marker, Points, RealPoint, Warps, Warp,
     RealParameter, BoolParameter, TimeSignatureParameter,
     AutomationTarget, Equalizer, Compressor, EqBand, Send,
     ContentType, MixerRole, TimeUnit, Unit, DeviceRole,
@@ -221,3 +221,74 @@ class TestNotesRoundTrip:
         assert result.notes[1].key == 64
         assert result.notes[2].key == 67
         assert result.notes[0].vel == 100.0
+
+
+class TestWarpsRoundTrip:
+    def test_warps_roundtrip(self):
+        """Create Warps with Audio content, serialize, deserialize, verify."""
+        audio = Audio(
+            sample_rate=44100, channels=2, duration=10.0,
+            file=FileReference(path="audio.wav"),
+        )
+        warps = Warps(
+            content=audio,
+            content_time_unit=TimeUnit.SECONDS,
+            time_unit=TimeUnit.BEATS,
+            events=[
+                Warp(time=0.0, content_time=0.0),
+                Warp(time=4.0, content_time=5.0),
+                Warp(time=8.0, content_time=10.0),
+            ],
+        )
+
+        elem = warps.to_xml()
+        xml_str = ET.tostring(elem, encoding="unicode")
+
+        Referenceable.reset_id()
+        elem2 = ET.fromstring(xml_str)
+        result = Warps.from_xml(elem2)
+
+        assert result.content_time_unit == TimeUnit.SECONDS
+        assert result.time_unit == TimeUnit.BEATS
+        assert result.content is not None
+        assert isinstance(result.content, Audio)
+        assert result.content.sample_rate == 44100
+        assert result.content.channels == 2
+        assert result.content.duration == 10.0
+        assert result.content.file.path == "audio.wav"
+        assert len(result.events) == 3
+        assert result.events[0].time == 0.0
+        assert result.events[0].content_time == 0.0
+        assert result.events[1].time == 4.0
+        assert result.events[1].content_time == 5.0
+        assert result.events[2].time == 8.0
+        assert result.events[2].content_time == 10.0
+
+    def test_warps_child_order_preserved_after_roundtrip(self):
+        """After roundtrip, re-serialized XML must still have content before warps."""
+        audio = Audio(
+            sample_rate=44100, channels=2, duration=5.0,
+            file=FileReference(path="test.wav"),
+        )
+        warps = Warps(
+            content=audio,
+            content_time_unit=TimeUnit.SECONDS,
+            events=[Warp(time=0.0, content_time=0.0), Warp(time=5.0, content_time=5.0)],
+        )
+
+        # First serialize
+        elem1 = warps.to_xml()
+        xml_str = ET.tostring(elem1, encoding="unicode")
+
+        # Deserialize
+        Referenceable.reset_id()
+        elem2 = ET.fromstring(xml_str)
+        result = Warps.from_xml(elem2)
+
+        # Re-serialize
+        elem3 = result.to_xml()
+        children = list(elem3)
+        assert len(children) == 3
+        assert children[0].tag == "Audio"
+        assert children[1].tag == "Warp"
+        assert children[2].tag == "Warp"

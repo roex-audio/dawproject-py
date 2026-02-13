@@ -25,6 +25,12 @@ class Warps(Timeline):
         self.content_time_unit = content_time_unit
 
     def to_xml(self):
+        # super().to_xml() returns an element with only attributes (from
+        # Timeline/Referenceable/Nameable); no child elements are added by the
+        # base classes.  The XSD 'warps' extension of 'timeline' defines the
+        # child sequence as: content (Timeline choice) followed by Warp
+        # elements, with 'contentTimeUnit' as an attribute.  The ordering below
+        # matches that schema.
         elem = super().to_xml()
         if self.content_time_unit is None:
             raise ValueError(

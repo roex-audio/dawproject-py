@@ -6,7 +6,7 @@ import pytest
 from lxml import etree as ET
 from dawproject import (
     DawProject, Project, Application, Transport, Track, Channel,
-    Arrangement, Lanes, Clips, Clip, Audio,
+    Arrangement, Lanes, Clips, Clip, Audio, Warps, Warp,
     RealParameter, MetaData,
     ContentType, MixerRole, TimeUnit, Unit,
     Utility, Referenceable, FileReference,
@@ -143,3 +143,47 @@ class TestValidate:
             # Schema validation might fail due to minor format differences,
             # but the method should at least not crash from path issues
             pass
+
+    def test_validate_project_with_warps(self):
+        """Warps XML must validate against Project.xsd.
+
+        This directly tests the concern from the issue: the child ordering
+        produced by Warps.to_xml() (content then Warp elements) must match
+        the XSD-defined sequence for the 'warps' type.
+        """
+        schema_path = os.path.join(os.path.dirname(__file__), "..", "Project.xsd")
+        if not os.path.exists(schema_path):
+            pytest.skip("Project.xsd not found")
+
+        project = Project()
+        project.application = Application(name="TestDAW", version="1.0")
+
+        master = Utility.create_track("Master", set(), MixerRole.MASTER, 1.0, 0.5)
+        lead = Utility.create_track("Lead", {ContentType.AUDIO}, MixerRole.REGULAR, 0.8, 0.5)
+        lead.channel.destination = master.channel
+        project.structure = [master, lead]
+
+        audio = Utility.create_audio("test.wav", 44100, 2, 10.0)
+        warps = Warps(
+            content=audio,
+            content_time_unit=TimeUnit.SECONDS,
+            time_unit=TimeUnit.BEATS,
+            events=[
+                Warp(time=0.0, content_time=0.0),
+                Warp(time=5.0, content_time=5.0),
+                Warp(time=10.0, content_time=10.0),
+            ],
+        )
+
+        clip = Clip(time=0, duration=10.0, content=warps)
+        clips = Clips(clips=[clip])
+        clips.track = lead
+
+        project.arrangement = Arrangement()
+        project.arrangement.lanes = Lanes()
+        project.arrangement.lanes.time_unit = TimeUnit.SECONDS
+        project.arrangement.lanes.lanes.append(clips)
+
+        # Validate against XSD -- this will raise IOError if the XML
+        # does not conform to the schema (e.g. wrong child ordering).
+        DawProject.validate(project)

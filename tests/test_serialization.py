@@ -222,6 +222,76 @@ class TestNotesSerialization:
         assert note_elems[0].get("key") == "60"
 
 
+class TestWarpsSerialization:
+    def test_warps_xml_child_ordering(self):
+        """XSD requires content (Timeline choice) before Warp elements."""
+        audio = Audio(
+            sample_rate=44100, channels=2, duration=10.0,
+            file=FileReference(path="audio.wav"),
+        )
+        warps = Warps(
+            content=audio,
+            content_time_unit=TimeUnit.SECONDS,
+            events=[Warp(time=0.0, content_time=0.0), Warp(time=5.0, content_time=5.0)],
+        )
+        elem = warps.to_xml()
+
+        children = list(elem)
+        assert len(children) == 3
+        # First child must be the content element (Audio), followed by Warps
+        assert children[0].tag == "Audio"
+        assert children[1].tag == "Warp"
+        assert children[2].tag == "Warp"
+
+    def test_warps_attributes(self):
+        """Warps must carry contentTimeUnit attribute and inherited Timeline attrs."""
+        audio = Audio(
+            sample_rate=44100, channels=2, duration=10.0,
+            file=FileReference(path="audio.wav"),
+        )
+        warps = Warps(
+            content=audio,
+            content_time_unit=TimeUnit.BEATS,
+            time_unit=TimeUnit.SECONDS,
+            events=[Warp(time=0.0, content_time=0.0)],
+        )
+        elem = warps.to_xml()
+
+        assert elem.tag == "Warps"
+        assert elem.get("contentTimeUnit") == "beats"
+        assert elem.get("timeUnit") == "seconds"
+
+    def test_warps_warp_values(self):
+        """Warp child elements must carry time and contentTime attributes."""
+        warps = Warps(
+            content_time_unit=TimeUnit.SECONDS,
+            events=[Warp(time=1.5, content_time=3.0)],
+        )
+        elem = warps.to_xml()
+
+        warp_elems = elem.findall("Warp")
+        assert len(warp_elems) == 1
+        assert warp_elems[0].get("time") == "1.5"
+        assert warp_elems[0].get("contentTime") == "3.0"
+
+    def test_warps_without_content(self):
+        """Warps with no content should only emit Warp children."""
+        warps = Warps(
+            content_time_unit=TimeUnit.SECONDS,
+            events=[Warp(time=0.0, content_time=0.0)],
+        )
+        elem = warps.to_xml()
+
+        children = list(elem)
+        assert len(children) == 1
+        assert children[0].tag == "Warp"
+
+    def test_warps_to_xml_raises_when_content_time_unit_is_none(self):
+        warps = Warps(content_time_unit=None)
+        with pytest.raises(ValueError, match="content_time_unit is required"):
+            warps.to_xml()
+
+
 class TestRealPointSerialization:
     def test_real_point(self):
         pt = RealPoint(time=1.0, value=0.5, interpolation=Interpolation.LINEAR)
@@ -231,30 +301,3 @@ class TestRealPointSerialization:
         assert elem.get("time") == "1.0"
         assert elem.get("value") == "0.5"
         assert elem.get("interpolation") == "linear"
-
-
-class TestWarpsSerialization:
-    def test_warps_with_content_time_unit(self):
-        audio = Audio(
-            sample_rate=44100, channels=1, duration=4.657,
-            file=FileReference(path="samples/dummy.wav"),
-            time_unit=TimeUnit.SECONDS,
-        )
-        warps = Warps(
-            content=audio,
-            content_time_unit=TimeUnit.SECONDS,
-            time_unit=TimeUnit.BEATS,
-            events=[Warp(time=0, content_time=0), Warp(time=8, content_time=4.657)],
-        )
-        elem = warps.to_xml()
-
-        assert elem.tag == "Warps"
-        assert elem.get("contentTimeUnit") == "seconds"
-        assert elem.find("Audio") is not None
-        warp_elems = elem.findall("Warp")
-        assert len(warp_elems) == 2
-
-    def test_warps_to_xml_raises_when_content_time_unit_is_none(self):
-        warps = Warps(content_time_unit=None)
-        with pytest.raises(ValueError, match="content_time_unit is required"):
-            warps.to_xml()
