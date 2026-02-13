@@ -20,15 +20,18 @@ class Arrangement(Referenceable):
         tempo_automation=None,
         markers=None,
         lanes=None,
+        name=None,
+        color=None,
+        comment=None,
     ):
-        super().__init__()
+        super().__init__(name, color, comment)
         self.time_signature_automation = time_signature_automation
         self.tempo_automation = tempo_automation
         self.markers = markers
         self.lanes = lanes
 
     def to_xml(self):
-        arrangement_elem = ET.Element("Arrangement")
+        arrangement_elem = super().to_xml()
 
         # XSD sequence order: Lanes, Markers, TempoAutomation, TimeSignatureAutomation
         if self.lanes is not None:
@@ -55,24 +58,26 @@ class Arrangement(Referenceable):
         from .markers import Markers
         from .lanes import Lanes
 
+        instance = super().from_xml(element)
+
         ts_automation_elem = element.find("TimeSignatureAutomation")
-        time_signature_automation = (
+        instance.time_signature_automation = (
             Points.from_xml(ts_automation_elem)
             if ts_automation_elem is not None
             else None
         )
 
         tempo_automation_elem = element.find("TempoAutomation")
-        tempo_automation = (
+        instance.tempo_automation = (
             Points.from_xml(tempo_automation_elem)
             if tempo_automation_elem is not None
             else None
         )
 
         markers_elem = element.find("Markers")
-        markers = Markers.from_xml(markers_elem) if markers_elem is not None else None
+        instance.markers = Markers.from_xml(markers_elem) if markers_elem is not None else None
 
         lanes_elem = element.find("Lanes")
-        lanes = Lanes.from_xml(lanes_elem) if lanes_elem is not None else None
+        instance.lanes = Lanes.from_xml(lanes_elem) if lanes_elem is not None else None
 
-        return cls(time_signature_automation, tempo_automation, markers, lanes)
+        return instance
