@@ -1,6 +1,5 @@
 """Arrangement model -- the main timeline arrangement."""
 
-from lxml import etree as ET
 from .referenceable import Referenceable
 
 
