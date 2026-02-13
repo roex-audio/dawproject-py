@@ -18,10 +18,18 @@ class Warps(Timeline):
         super().__init__(**kwargs)
         self.events = events if events is not None else []
         self.content = content
-        self.content_time_unit = content_time_unit if content_time_unit is not None else TimeUnit.BEATS
+        if content_time_unit is not None and not isinstance(content_time_unit, TimeUnit):
+            raise TypeError(
+                f"content_time_unit must be a TimeUnit, got {type(content_time_unit).__name__}"
+            )
+        self.content_time_unit = content_time_unit
 
     def to_xml(self):
         elem = super().to_xml()
+        if self.content_time_unit is None:
+            raise ValueError(
+                "Warps.content_time_unit is required by the XSD schema and must not be None"
+            )
         elem.set("contentTimeUnit", self.content_time_unit.value)
         if self.content is not None:
             elem.append(self.content.to_xml())
@@ -51,9 +59,10 @@ class Warps(Timeline):
         instance.events = events
 
         content_time_unit_str = element.get("contentTimeUnit")
-        try:
-            instance.content_time_unit = TimeUnit(content_time_unit_str) if content_time_unit_str else TimeUnit.BEATS
-        except ValueError:
-            instance.content_time_unit = TimeUnit.BEATS
+        if not content_time_unit_str:
+            raise ValueError(
+                "Warps element is missing required attribute 'contentTimeUnit'"
+            )
+        instance.content_time_unit = TimeUnit(content_time_unit_str)
 
         return instance
