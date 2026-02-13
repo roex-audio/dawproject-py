@@ -90,10 +90,10 @@ class Limiter(BuiltInDevice):
 
         instance = super().from_xml(element)
 
-        instance.threshold = RealParameter.from_xml(element.find("Threshold"))
-        instance.input_gain = RealParameter.from_xml(element.find("InputGain"))
-        instance.output_gain = RealParameter.from_xml(element.find("OutputGain"))
-        instance.attack = RealParameter.from_xml(element.find("Attack"))
-        instance.release = RealParameter.from_xml(element.find("Release"))
+        instance.threshold = RealParameter.from_xml(element.find("Threshold")) or RealParameter(None)
+        instance.input_gain = RealParameter.from_xml(element.find("InputGain")) or RealParameter(None)
+        instance.output_gain = RealParameter.from_xml(element.find("OutputGain")) or RealParameter(None)
+        instance.attack = RealParameter.from_xml(element.find("Attack")) or RealParameter(None)
+        instance.release = RealParameter.from_xml(element.find("Release")) or RealParameter(None)
 
         return instance

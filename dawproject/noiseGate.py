@@ -90,10 +90,10 @@ class NoiseGate(BuiltInDevice):
 
         instance = super().from_xml(element)
 
-        instance.threshold = RealParameter.from_xml(element.find("Threshold"))
-        instance.ratio = RealParameter.from_xml(element.find("Ratio"))
-        instance.attack = RealParameter.from_xml(element.find("Attack"))
-        instance.release = RealParameter.from_xml(element.find("Release"))
-        instance.range = RealParameter.from_xml(element.find("Range"))
+        instance.threshold = RealParameter.from_xml(element.find("Threshold")) or RealParameter(None)
+        instance.ratio = RealParameter.from_xml(element.find("Ratio")) or RealParameter(None)
+        instance.attack = RealParameter.from_xml(element.find("Attack")) or RealParameter(None)
+        instance.release = RealParameter.from_xml(element.find("Release")) or RealParameter(None)
+        instance.range = RealParameter.from_xml(element.find("Range")) or RealParameter(None)
 
         return instance
