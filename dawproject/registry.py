@@ -6,6 +6,7 @@ for polymorphic deserialization across modules.
 
 # Registry dict: XML tag name -> class
 _TAG_REGISTRY = {}
+_REGISTRY_POPULATED = False
 
 
 def register(tag_name, cls):
@@ -23,8 +24,10 @@ def populate_registry():
 
     This is called lazily on first use to avoid circular import issues.
     """
-    if _TAG_REGISTRY:
+    global _REGISTRY_POPULATED
+    if _REGISTRY_POPULATED:
         return  # Already populated
+    _REGISTRY_POPULATED = True
 
     from .lanes import Lanes
     from .clips import Clips

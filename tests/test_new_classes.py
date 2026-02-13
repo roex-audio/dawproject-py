@@ -426,6 +426,7 @@ class TestRegistryDispatch:
     def test_resolve_new_point_types(self):
         from dawproject import registry
         registry._TAG_REGISTRY.clear()
+        registry._REGISTRY_POPULATED = False
         registry.populate_registry()
 
         assert registry.resolve_point("BoolPoint") is BoolPoint
@@ -436,6 +437,7 @@ class TestRegistryDispatch:
     def test_resolve_new_device_types(self):
         from dawproject import registry
         registry._TAG_REGISTRY.clear()
+        registry._REGISTRY_POPULATED = False
         registry.populate_registry()
 
         assert registry.resolve_device("Vst2Plugin") is Vst2Plugin
@@ -448,6 +450,7 @@ class TestRegistryDispatch:
     def test_resolve_new_timeline_types(self):
         from dawproject import registry
         registry._TAG_REGISTRY.clear()
+        registry._REGISTRY_POPULATED = False
         registry.populate_registry()
 
         assert registry.resolve_timeline("Video") is Video
@@ -458,6 +461,7 @@ class TestRegistryDispatch:
         from dawproject.markers import Markers
         from dawproject import registry
         registry._TAG_REGISTRY.clear()
+        registry._REGISTRY_POPULATED = False
         registry.populate_registry()
 
         assert registry.resolve_timeline("Markers") is Markers
