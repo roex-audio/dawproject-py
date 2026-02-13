@@ -280,3 +280,78 @@ class TestMetaDataDeserialization:
         assert meta.artist == "Test Artist"
         assert meta.year == "2025"
         assert meta.album is None
+
+
+class TestReferenceableIdCounter:
+    """Regression tests for Referenceable.ID counter after deserialization.
+
+    Previously, from_xml did not advance Referenceable.ID when loading
+    objects with explicit id attributes.  After loading id0..id9, the
+    counter remained at 0 and any newly created object would collide
+    with the first deserialized object.
+    """
+
+    def test_id_counter_advances_past_loaded_ids(self):
+        """After deserializing id0..id3 the counter must be >= 4."""
+        xml = """
+        <Project version="1.0">
+            <Application name="Test" version="1.0"/>
+            <Structure>
+                <Track name="Master" id="id0">
+                    <Channel id="id1" role="master" audioChannels="2"/>
+                </Track>
+                <Track name="Bass" id="id2">
+                    <Channel id="id3" role="regular" audioChannels="2" destination="id1"/>
+                </Track>
+            </Structure>
+        </Project>
+        """
+        root = ET.fromstring(xml)
+        Project.from_xml(root)
+
+        assert Referenceable.ID >= 4
+
+    def test_new_object_after_load_gets_unique_id(self):
+        """A newly created Track must not collide with deserialized IDs."""
+        xml = """
+        <Project version="1.0">
+            <Application name="Test" version="1.0"/>
+            <Structure>
+                <Track name="Master" id="id0">
+                    <Channel id="id1" role="master" audioChannels="2"/>
+                </Track>
+                <Track name="Bass" id="id2">
+                    <Channel id="id3" role="regular" audioChannels="2" destination="id1"/>
+                </Track>
+            </Structure>
+        </Project>
+        """
+        root = ET.fromstring(xml)
+        Project.from_xml(root)
+
+        new_track = Track(name="NewTrack")
+        assert new_track.id not in ("id0", "id1", "id2", "id3")
+
+    def test_original_instance_preserved_after_new_creation(self):
+        """Creating new objects must not overwrite deserialized instances."""
+        xml = '<Track name="Master" id="id0"/>'
+        elem = ET.fromstring(xml)
+        Track.from_xml(elem)
+
+        new_track = Track(name="NewTrack")
+        master = Referenceable.get_by_id("id0")
+
+        assert master is not None
+        assert master.name == "Master"
+        assert new_track.id != "id0"
+
+    def test_non_sequential_ids_advance_counter(self):
+        """IDs need not be sequential; counter should pass the highest."""
+        xml_a = '<Track name="A" id="id5"/>'
+        xml_b = '<Track name="B" id="id2"/>'
+        Track.from_xml(ET.fromstring(xml_a))
+        Track.from_xml(ET.fromstring(xml_b))
+
+        assert Referenceable.ID >= 6
+        new_track = Track(name="C")
+        assert new_track.id == "id6"

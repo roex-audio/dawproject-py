@@ -41,6 +41,14 @@ class Referenceable(Nameable):
         xml_id = element.get("id") if element is not None else None
         if xml_id:
             instance.id = xml_id
+            # Advance the counter past any loaded ID so that newly created
+            # objects never collide with deserialized ones.
+            try:
+                num = int(xml_id.removeprefix("id"))
+                if num >= Referenceable.ID:
+                    Referenceable.ID = num + 1
+            except (ValueError, AttributeError):
+                pass
         else:
             instance.id = f"id{Referenceable.ID}"
             Referenceable.ID += 1
