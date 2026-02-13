@@ -45,6 +45,7 @@ def populate_registry():
     from .realParameter import RealParameter
     from .integerParameter import IntegerParameter
     from .enumParameter import EnumParameter
+    from .timeSignatureParameter import TimeSignatureParameter
     from .device import Device
     from .builtInDevice import BuiltInDevice
     from .equalizer import Equalizer
@@ -82,6 +83,7 @@ def populate_registry():
     register("RealParameter", RealParameter)
     register("IntegerParameter", IntegerParameter)
     register("EnumParameter", EnumParameter)
+    register("TimeSignatureParameter", TimeSignatureParameter)
 
     # Device subclasses
     register("Device", Device)
