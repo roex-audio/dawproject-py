@@ -2,6 +2,7 @@
 
 from .timeline import Timeline
 from .automationTarget import AutomationTarget
+from .unit import Unit
 
 
 class Points(Timeline):
@@ -32,7 +33,8 @@ class Points(Timeline):
     def to_xml(self):
         elem = super().to_xml()
         if self.unit is not None:
-            elem.set("unit", self.unit)
+            unit_val = self.unit.value if isinstance(self.unit, Unit) else str(self.unit)
+            elem.set("unit", unit_val)
         elem.append(self.target.to_xml())
         for point in self.points:
             elem.append(point.to_xml())
