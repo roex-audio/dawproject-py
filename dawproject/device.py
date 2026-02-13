@@ -48,16 +48,7 @@ class Device(Referenceable):
     def to_xml(self):
         device_elem = super().to_xml()
 
-        if self.automated_parameters:
-            parameters_elem = ET.SubElement(device_elem, "Parameters")
-            for param in self.automated_parameters:
-                parameters_elem.append(param.to_xml())
-
-        if self.enabled is not None:
-            enabled_xml = self.enabled.to_xml()
-            enabled_xml.tag = "Enabled"
-            device_elem.append(enabled_xml)
-
+        # Attributes (order does not matter for XML attributes)
         if self.device_role is not None:
             role_val = self.device_role.value if isinstance(self.device_role, DeviceRole) else str(self.device_role)
             device_elem.set("deviceRole", role_val)
@@ -73,6 +64,17 @@ class Device(Referenceable):
 
         if self.device_vendor is not None:
             device_elem.set("deviceVendor", self.device_vendor)
+
+        # Child elements in XSD-mandated sequence: Parameters, Enabled, State
+        if self.automated_parameters:
+            parameters_elem = ET.SubElement(device_elem, "Parameters")
+            for param in self.automated_parameters:
+                parameters_elem.append(param.to_xml())
+
+        if self.enabled is not None:
+            enabled_xml = self.enabled.to_xml()
+            enabled_xml.tag = "Enabled"
+            device_elem.append(enabled_xml)
 
         if self.state is not None:
             state_xml = self.state.to_xml()
