@@ -39,6 +39,7 @@ class MediaFile(Timeline):
             if file_elem is not None
             else FileReference(path="")
         )
-        instance.duration = DoubleAdapter.from_xml(element.get("duration")) or 0.0
+        parsed_duration = DoubleAdapter.from_xml(element.get("duration"))
+        instance.duration = parsed_duration if parsed_duration is not None else 0.0
 
         return instance

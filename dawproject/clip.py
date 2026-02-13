@@ -99,7 +99,8 @@ class Clip(Nameable):
 
         instance = super().from_xml(element)
 
-        instance.time = DoubleAdapter.from_xml(element.get("time")) or 0.0
+        parsed_time = DoubleAdapter.from_xml(element.get("time"))
+        instance.time = parsed_time if parsed_time is not None else 0.0
         instance.duration = DoubleAdapter.from_xml(element.get("duration"))
 
         ctu = element.get("contentTimeUnit")
