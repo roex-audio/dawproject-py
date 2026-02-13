@@ -1,10 +1,10 @@
 """Limiter model -- a built-in limiter device."""
 
-from .builtInDevice import BuiltInDevice
+from .builtInDevice import BuiltinDevice
 from .realParameter import RealParameter
 
 
-class Limiter(BuiltInDevice):
+class Limiter(BuiltinDevice):
     """A built-in limiter device.
 
     Attributes:

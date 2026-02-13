@@ -1,16 +1,16 @@
 """Compressor model -- a built-in compressor device."""
 
 from lxml import etree as ET
-from .builtInDevice import BuiltInDevice
+from .builtInDevice import BuiltinDevice
 from .realParameter import RealParameter
 from .boolParameter import BoolParameter
 from .unit import Unit
 
 
-class Compressor(BuiltInDevice):
+class Compressor(BuiltinDevice):
     """A built-in compressor device with threshold, ratio, attack, release, and gain.
 
-    Extends BuiltInDevice -> Device -> Referenceable, so it has an id,
+    Extends BuiltinDevice -> Device -> Referenceable, so it has an id,
     deviceName, deviceRole, enabled, etc. from the Device base class.
 
     Attributes:

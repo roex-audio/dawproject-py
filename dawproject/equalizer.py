@@ -1,16 +1,16 @@
 """Equalizer model -- a built-in equalizer device."""
 
 from lxml import etree as ET
-from .builtInDevice import BuiltInDevice
+from .builtInDevice import BuiltinDevice
 from .realParameter import RealParameter
 from .eqBand import EqBand
 from .unit import Unit
 
 
-class Equalizer(BuiltInDevice):
+class Equalizer(BuiltinDevice):
     """A built-in equalizer device with bands and input/output gain.
 
-    Extends BuiltInDevice -> Device -> Referenceable, so it has an id,
+    Extends BuiltinDevice -> Device -> Referenceable, so it has an id,
     deviceName, deviceRole, enabled, etc. from the Device base class.
 
     Attributes:

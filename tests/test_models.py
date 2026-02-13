@@ -6,7 +6,7 @@ from dawproject import (
     Arrangement, Scene, Send, Clip, Audio, Lanes, Clips, Notes, Note,
     Markers, Marker, Points, Warps, Warp, MediaFile,
     RealParameter, BoolParameter, Parameter, TimeSignatureParameter,
-    AutomationTarget, Device, BuiltInDevice, Equalizer, Compressor, EqBand,
+    AutomationTarget, Device, BuiltinDevice, BuiltInDevice, Equalizer, Compressor, EqBand,
     ContentType, MixerRole, TimeUnit, Unit, Interpolation, SendType,
     DeviceRole, EqBandType, ExpressionType,
     Utility, Referenceable, FileReference, DoubleAdapter, RealPoint, Point,

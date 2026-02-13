@@ -51,7 +51,7 @@ from .automationTarget import AutomationTarget
 
 # Devices
 from .device import Device
-from .builtInDevice import BuiltInDevice
+from .builtInDevice import BuiltinDevice, BuiltInDevice  # BuiltInDevice kept as alias
 from .plugin import Plugin
 from .vst2Plugin import Vst2Plugin
 from .vst3Plugin import Vst3Plugin
@@ -128,7 +128,8 @@ __all__ = [
     "AutomationTarget",
     # Devices
     "Device",
-    "BuiltInDevice",
+    "BuiltinDevice",
+    "BuiltInDevice",  # backward-compatible alias
     "Plugin",
     "Vst2Plugin",
     "Vst3Plugin",

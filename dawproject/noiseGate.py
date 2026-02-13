@@ -1,10 +1,10 @@
 """NoiseGate model -- a built-in noise gate device."""
 
-from .builtInDevice import BuiltInDevice
+from .builtInDevice import BuiltinDevice
 from .realParameter import RealParameter
 
 
-class NoiseGate(BuiltInDevice):
+class NoiseGate(BuiltinDevice):
     """A built-in noise gate device.
 
     Attributes:

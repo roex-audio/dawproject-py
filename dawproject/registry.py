@@ -50,7 +50,7 @@ def populate_registry():
     from .enumParameter import EnumParameter
     from .timeSignatureParameter import TimeSignatureParameter
     from .device import Device
-    from .builtInDevice import BuiltInDevice
+    from .builtInDevice import BuiltinDevice
     from .equalizer import Equalizer
     from .compressor import Compressor
     from .noiseGate import NoiseGate
@@ -90,7 +90,7 @@ def populate_registry():
 
     # Device subclasses
     register("Device", Device)
-    register("BuiltinDevice", BuiltInDevice)
+    register("BuiltinDevice", BuiltinDevice)
     register("Equalizer", Equalizer)
     register("Compressor", Compressor)
     register("NoiseGate", NoiseGate)
