@@ -37,10 +37,8 @@ class Video(MediaFile):
 
     def to_xml(self):
         elem = super().to_xml()
-        if self.sample_rate:
-            elem.set("sampleRate", str(self.sample_rate))
-        if self.channels:
-            elem.set("channels", str(self.channels))
+        elem.set("sampleRate", str(self.sample_rate))
+        elem.set("channels", str(self.channels))
         if self.algorithm:
             elem.set("algorithm", self.algorithm)
         return elem
