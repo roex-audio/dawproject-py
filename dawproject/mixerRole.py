@@ -7,6 +7,6 @@ class MixerRole(Enum):
     """The role of a channel in the mixer."""
     REGULAR = "regular"
     MASTER = "master"
-    EFFECT = "effect"
-    SUBMIX = "submix"
+    EFFECT_TRACK = "effect"
+    SUB_MIX = "submix"
     VCA = "vca"

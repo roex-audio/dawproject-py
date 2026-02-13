@@ -240,7 +240,8 @@ class TestEnums:
     def test_mixer_role_values(self):
         assert MixerRole.MASTER.value == "master"
         assert MixerRole.REGULAR.value == "regular"
-        assert MixerRole.EFFECT.value == "effect"
+        assert MixerRole.EFFECT_TRACK.value == "effect"
+        assert MixerRole.SUB_MIX.value == "submix"
 
     def test_unit_values(self):
         assert Unit.LINEAR.value == "linear"
