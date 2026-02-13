@@ -452,3 +452,13 @@ class TestRegistryDispatch:
 
         assert registry.resolve_timeline("Video") is Video
         assert registry.resolve_timeline("ClipSlot") is ClipSlot
+
+    def test_resolve_lowercase_markers(self):
+        """XSD global element is <markers> (lowercase); registry must handle both cases."""
+        from dawproject.markers import Markers
+        from dawproject import registry
+        registry._TAG_REGISTRY.clear()
+        registry.populate_registry()
+
+        assert registry.resolve_timeline("Markers") is Markers
+        assert registry.resolve_timeline("markers") is Markers

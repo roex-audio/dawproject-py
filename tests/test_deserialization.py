@@ -201,6 +201,45 @@ class TestMarkersDeserialization:
         assert markers.markers[0].name == "Intro"
         assert markers.markers[1].time == 32.0
 
+    def test_parse_lowercase_markers(self):
+        """XSD declares global element as <markers> (lowercase).
+
+        DAWs following the XSD will produce <markers> children inside
+        Lanes, Scene, Clip, Note, and Warps.  The registry must resolve
+        both the uppercase *and* lowercase tag names.
+        """
+        xml = """
+        <markers>
+            <Marker time="0.0" name="Intro"/>
+            <Marker time="32.0" name="Verse"/>
+        </markers>
+        """
+        elem = ET.fromstring(xml)
+        markers = Markers.from_xml(elem)
+
+        assert len(markers.markers) == 2
+        assert markers.markers[0].name == "Intro"
+        assert markers.markers[1].time == 32.0
+
+    def test_lowercase_markers_resolved_inside_lanes(self):
+        """Ensure <markers> (lowercase) is not silently dropped by Lanes."""
+        xml = """
+        <Lanes timeUnit="seconds">
+            <markers>
+                <Marker time="0.0" name="Intro"/>
+                <Marker time="32.0" name="Verse"/>
+            </markers>
+        </Lanes>
+        """
+        elem = ET.fromstring(xml)
+        lanes = Lanes.from_xml(elem)
+
+        assert len(lanes.lanes) == 1
+        assert isinstance(lanes.lanes[0], Markers)
+        assert len(lanes.lanes[0].markers) == 2
+        assert lanes.lanes[0].markers[0].name == "Intro"
+        assert lanes.lanes[0].markers[1].name == "Verse"
+
 
 class TestEqualizerDeserialization:
     def test_parse_equalizer(self):

@@ -62,6 +62,7 @@ def populate_registry():
     register("Clips", Clips)
     register("Notes", Notes)
     register("Markers", Markers)
+    register("markers", Markers)  # XSD global element is lowercase
     register("Points", Points)
     register("Warps", Warps)
     register("Audio", Audio)
