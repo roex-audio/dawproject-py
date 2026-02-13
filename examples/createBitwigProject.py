@@ -1,23 +1,23 @@
 import os
-from classes.referenceable import Referenceable
-from classes.project import Project
-from classes.application import Application
-from classes.realParameter import RealParameter
-from classes.mixerRole import MixerRole
-from classes.deviceRole import DeviceRole
-from classes.arrangement import Arrangement
-from classes.lanes import Lanes
-from classes.timeUnit import TimeUnit
-from classes.dawProject import DawProject
-from classes.metaData import MetaData
-from classes.utility import Utility
-from classes.contentType import ContentType
-from classes.transport import Transport
-from classes.unit import Unit
-from classes.compressor import Compressor
-from classes.equalizer import Equalizer
-from classes.eqBand import EqBand
-from classes.eqBandType import EqBandType
+from dawproject.referenceable import Referenceable
+from dawproject.project import Project
+from dawproject.application import Application
+from dawproject.realParameter import RealParameter
+from dawproject.mixerRole import MixerRole
+from dawproject.deviceRole import DeviceRole
+from dawproject.arrangement import Arrangement
+from dawproject.lanes import Lanes
+from dawproject.timeUnit import TimeUnit
+from dawproject.dawProject import DawProject
+from dawproject.metaData import MetaData
+from dawproject.utility import Utility
+from dawproject.contentType import ContentType
+from dawproject.transport import Transport
+from dawproject.unit import Unit
+from dawproject.compressor import Compressor
+from dawproject.equalizer import Equalizer
+from dawproject.eqBand import EqBand
+from dawproject.eqBandType import EqBandType
 
 
 def create_empty_project():
@@ -113,8 +113,6 @@ def create_project_with_audio_tracks(audio_tracks):
         clips.track = audio_track
 
         # Create lanes and add clips to arrangement
-        # track_lanes = Lanes()
-        # track_lanes.lanes.append(clips)
         project.arrangement.lanes.lanes.append(clips)
 
         # Apply EQ settings
@@ -148,8 +146,8 @@ def create_project_with_audio_tracks(audio_tracks):
             )
             audio_track.channel.devices.append(compressor)
 
-        # Save the project with embedded files
-        save_test_project(project, "RoEx_Automix", lambda meta, files: files.update(embedded_files))
+    # Save the project once after all tracks are added
+    save_test_project(project, "RoEx_Automix", lambda meta, files: files.update(embedded_files))
 
 
 if __name__ == "__main__":

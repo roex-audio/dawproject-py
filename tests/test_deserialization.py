@@ -1,0 +1,449 @@
+"""Tests for XML deserialization (from_xml) of DAWproject models."""
+
+import pytest
+from lxml import etree as ET
+from dawproject import (
+    Project, Application, Transport, Track, Channel,
+    Arrangement, Lanes, Clips, Clip, Audio, Notes, Note,
+    Markers, Marker, Points, RealPoint, Send, Warps, Warp,
+    RealParameter, BoolParameter, TimeSignatureParameter,
+    Equalizer, Compressor, EqBand, MetaData,
+    ContentType, MixerRole, TimeUnit, Unit, DeviceRole,
+    EqBandType, Interpolation, SendType,
+    Referenceable, FileReference,
+)
+
+
+@pytest.fixture(autouse=True)
+def reset_ids():
+    Referenceable.reset_id()
+    yield
+    Referenceable.reset_id()
+
+
+class TestProjectDeserialization:
+    def test_parse_minimal_project(self):
+        xml = '<Project version="1.0"><Application name="Test" version="1.0"/></Project>'
+        root = ET.fromstring(xml)
+        project = Project.from_xml(root)
+
+        assert project.version == "1.0"
+        assert project.application.name == "Test"
+        assert project.structure == []
+
+    def test_parse_project_with_structure(self):
+        xml = """
+        <Project version="1.0">
+            <Application name="Test" version="1.0"/>
+            <Structure>
+                <Track name="Master" id="id0" loaded="true">
+                    <Channel id="id1" role="master" audioChannels="2"/>
+                </Track>
+                <Track name="Bass" id="id2" contentType="audio" loaded="true">
+                    <Channel id="id3" role="regular" audioChannels="2" destination="id1"/>
+                </Track>
+            </Structure>
+        </Project>
+        """
+        root = ET.fromstring(xml)
+        project = Project.from_xml(root)
+
+        assert len(project.structure) == 2
+        assert project.structure[0].name == "Master"
+        assert project.structure[1].name == "Bass"
+        assert project.structure[1].channel is not None
+        assert project.structure[1].channel.role == MixerRole.REGULAR
+        assert project.structure[1].content_type == [ContentType.AUDIO]
+
+
+class TestTrackDeserialization:
+    def test_parse_track(self):
+        xml = '<Track name="Vocals" id="id0" contentType="audio notes" loaded="true"/>'
+        elem = ET.fromstring(xml)
+        track = Track.from_xml(elem)
+
+        assert track.name == "Vocals"
+        assert track.loaded is True
+        assert ContentType.AUDIO in track.content_type
+        assert ContentType.NOTES in track.content_type
+
+    def test_parse_track_with_channel(self):
+        xml = """
+        <Track name="Lead" id="id0">
+            <Channel id="id1" role="regular" audioChannels="2">
+                <Volume id="id2" value="0.8" unit="linear"/>
+                <Pan id="id3" value="0.5" unit="normalized"/>
+            </Channel>
+        </Track>
+        """
+        elem = ET.fromstring(xml)
+        track = Track.from_xml(elem)
+
+        assert track.channel is not None
+        assert track.channel.volume.value == 0.8
+        assert track.channel.volume.unit == Unit.LINEAR
+        assert track.channel.pan.value == 0.5
+
+
+class TestChannelDeserialization:
+    def test_parse_channel_role(self):
+        xml = '<Channel id="id0" role="master" audioChannels="2"/>'
+        elem = ET.fromstring(xml)
+        ch = Channel.from_xml(elem)
+
+        assert ch.role == MixerRole.MASTER
+        assert ch.audio_channels == 2
+
+
+class TestRealParameterDeserialization:
+    def test_parse_real_parameter(self):
+        xml = '<RealParameter id="id0" value="0.75" unit="linear" min="0.0" max="1.0"/>'
+        elem = ET.fromstring(xml)
+        param = RealParameter.from_xml(elem)
+
+        assert param.value == 0.75
+        assert param.unit == Unit.LINEAR
+        assert param.min == 0.0
+        assert param.max == 1.0
+
+    def test_parse_bpm_parameter(self):
+        xml = '<Tempo id="id0" value="120.0" unit="bpm"/>'
+        elem = ET.fromstring(xml)
+        param = RealParameter.from_xml(elem)
+
+        assert param.value == 120.0
+        assert param.unit == Unit.BPM
+
+
+class TestClipDeserialization:
+    def test_parse_clip_with_audio(self):
+        xml = """
+        <Clip time="0" duration="10.0">
+            <Audio duration="10.0" sampleRate="44100" channels="2" timeUnit="seconds">
+                <File path="test.wav" external="false"/>
+            </Audio>
+        </Clip>
+        """
+        elem = ET.fromstring(xml)
+        clip = Clip.from_xml(elem)
+
+        assert clip.time == 0.0
+        assert clip.duration == 10.0
+        assert isinstance(clip.content, Audio)
+        assert clip.content.sample_rate == 44100
+        assert clip.content.file.path == "test.wav"
+
+
+class TestAudioDeserialization:
+    def test_parse_audio(self):
+        xml = """
+        <Audio duration="5.0" sampleRate="48000" channels="1" timeUnit="seconds">
+            <File path="vocal.wav" external="true"/>
+        </Audio>
+        """
+        elem = ET.fromstring(xml)
+        audio = Audio.from_xml(elem)
+
+        assert audio.sample_rate == 48000
+        assert audio.channels == 1
+        assert audio.duration == 5.0
+        assert audio.time_unit == TimeUnit.SECONDS
+        assert audio.file.path == "vocal.wav"
+        assert audio.file.external is True
+
+
+class TestLanesDeserialization:
+    def test_parse_lanes_with_clips(self):
+        xml = """
+        <Lanes timeUnit="seconds">
+            <Clips track="id0">
+                <Clip time="0" duration="5.0"/>
+            </Clips>
+        </Lanes>
+        """
+        elem = ET.fromstring(xml)
+        lanes = Lanes.from_xml(elem)
+
+        assert lanes.time_unit == TimeUnit.SECONDS
+        assert len(lanes.lanes) == 1
+        assert isinstance(lanes.lanes[0], Clips)
+
+
+class TestNotesDeserialization:
+    def test_parse_notes(self):
+        xml = """
+        <Notes>
+            <Note time="0.0" duration="1.0" key="60" vel="100.0"/>
+            <Note time="1.0" duration="0.5" key="64" vel="80.0"/>
+        </Notes>
+        """
+        elem = ET.fromstring(xml)
+        notes = Notes.from_xml(elem)
+
+        assert len(notes.notes) == 2
+        assert notes.notes[0].key == 60
+        assert notes.notes[0].vel == 100.0
+        assert notes.notes[1].key == 64
+
+
+class TestMarkersDeserialization:
+    def test_parse_markers(self):
+        xml = """
+        <Markers>
+            <Marker time="0.0" name="Intro"/>
+            <Marker time="32.0" name="Verse"/>
+        </Markers>
+        """
+        elem = ET.fromstring(xml)
+        markers = Markers.from_xml(elem)
+
+        assert len(markers.markers) == 2
+        assert markers.markers[0].name == "Intro"
+        assert markers.markers[1].time == 32.0
+
+    def test_parse_lowercase_markers(self):
+        """XSD declares global element as <markers> (lowercase).
+
+        DAWs following the XSD will produce <markers> children inside
+        Lanes, Scene, Clip, Note, and Warps.  The registry must resolve
+        both the uppercase *and* lowercase tag names.
+        """
+        xml = """
+        <markers>
+            <Marker time="0.0" name="Intro"/>
+            <Marker time="32.0" name="Verse"/>
+        </markers>
+        """
+        elem = ET.fromstring(xml)
+        markers = Markers.from_xml(elem)
+
+        assert len(markers.markers) == 2
+        assert markers.markers[0].name == "Intro"
+        assert markers.markers[1].time == 32.0
+
+    def test_lowercase_markers_resolved_inside_lanes(self):
+        """Ensure <markers> (lowercase) is not silently dropped by Lanes."""
+        xml = """
+        <Lanes timeUnit="seconds">
+            <markers>
+                <Marker time="0.0" name="Intro"/>
+                <Marker time="32.0" name="Verse"/>
+            </markers>
+        </Lanes>
+        """
+        elem = ET.fromstring(xml)
+        lanes = Lanes.from_xml(elem)
+
+        assert len(lanes.lanes) == 1
+        assert isinstance(lanes.lanes[0], Markers)
+        assert len(lanes.lanes[0].markers) == 2
+        assert lanes.lanes[0].markers[0].name == "Intro"
+        assert lanes.lanes[0].markers[1].name == "Verse"
+
+
+class TestWarpsDeserialization:
+    def test_parse_warps_with_content_time_unit(self):
+        xml = """
+        <Warps contentTimeUnit="seconds" timeUnit="beats">
+            <Audio duration="4.657" sampleRate="44100" channels="1" timeUnit="seconds">
+                <File path="samples/dummy.wav"/>
+            </Audio>
+            <Warp time="0" contentTime="0"/>
+            <Warp time="8" contentTime="4.657"/>
+        </Warps>
+        """
+        elem = ET.fromstring(xml)
+        warps = Warps.from_xml(elem)
+
+        assert warps.content_time_unit == TimeUnit.SECONDS
+        assert warps.time_unit == TimeUnit.BEATS
+        assert isinstance(warps.content, Audio)
+        assert len(warps.events) == 2
+        assert warps.events[0].time == 0
+        assert warps.events[1].content_time == 4.657
+
+    def test_parse_warps_missing_content_time_unit_raises(self):
+        xml = """
+        <Warps timeUnit="beats">
+            <Audio duration="4.657" sampleRate="44100" channels="1" timeUnit="seconds">
+                <File path="samples/dummy.wav"/>
+            </Audio>
+            <Warp time="0" contentTime="0"/>
+            <Warp time="8" contentTime="4.657"/>
+        </Warps>
+        """
+        elem = ET.fromstring(xml)
+        with pytest.raises(ValueError, match="missing required attribute 'contentTimeUnit'"):
+            Warps.from_xml(elem)
+
+    def test_parse_warps_invalid_content_time_unit_raises(self):
+        xml = """
+        <Warps contentTimeUnit="invalid_unit" timeUnit="beats">
+            <Warp time="0" contentTime="0"/>
+        </Warps>
+        """
+        elem = ET.fromstring(xml)
+        with pytest.raises(ValueError):
+            Warps.from_xml(elem)
+
+    def test_parse_warps_with_audio_content(self):
+        xml = """
+        <Warps contentTimeUnit="seconds" timeUnit="beats">
+            <Audio duration="10.0" sampleRate="44100" channels="2" timeUnit="seconds">
+                <File path="audio.wav"/>
+            </Audio>
+            <Warp time="0.0" contentTime="0.0"/>
+            <Warp time="5.0" contentTime="5.0"/>
+        </Warps>
+        """
+        elem = ET.fromstring(xml)
+        warps = Warps.from_xml(elem)
+
+        assert warps.content_time_unit == TimeUnit.SECONDS
+        assert warps.time_unit == TimeUnit.BEATS
+        assert warps.content is not None
+        assert isinstance(warps.content, Audio)
+        assert warps.content.sample_rate == 44100
+        assert warps.content.file.path == "audio.wav"
+        assert len(warps.events) == 2
+        assert warps.events[0].time == 0.0
+        assert warps.events[0].content_time == 0.0
+        assert warps.events[1].time == 5.0
+        assert warps.events[1].content_time == 5.0
+
+    def test_parse_warps_without_content(self):
+        """Warps with only Warp elements and no content child."""
+        xml = """
+        <Warps contentTimeUnit="beats">
+            <Warp time="0.0" contentTime="0.0"/>
+        </Warps>
+        """
+        elem = ET.fromstring(xml)
+        warps = Warps.from_xml(elem)
+
+        assert warps.content is None
+        assert len(warps.events) == 1
+        assert warps.content_time_unit == TimeUnit.BEATS
+
+    def test_parse_warps_content_time_unit_values(self):
+        for unit_str, expected in [("beats", TimeUnit.BEATS), ("seconds", TimeUnit.SECONDS)]:
+            xml = f'<Warps contentTimeUnit="{unit_str}"><Warp time="0" contentTime="0"/></Warps>'
+            elem = ET.fromstring(xml)
+            warps = Warps.from_xml(elem)
+            assert warps.content_time_unit == expected
+
+
+class TestEqualizerDeserialization:
+    def test_parse_equalizer(self):
+        xml = """
+        <Equalizer deviceName="EQ_1" deviceRole="audioFX">
+            <Band type="bell">
+                <Freq id="id0" value="1000" unit="hertz"/>
+                <Gain id="id1" value="3.0" unit="decibel"/>
+                <Q id="id2" value="1.0" unit="linear"/>
+                <Enabled id="id3" value="true"/>
+            </Band>
+            <InputGain id="id4" value="0.0" unit="decibel"/>
+            <OutputGain id="id5" value="0.0" unit="decibel"/>
+        </Equalizer>
+        """
+        elem = ET.fromstring(xml)
+        eq = Equalizer.from_xml(elem)
+
+        assert eq.device_name == "EQ_1"
+        assert len(eq.bands) == 1
+        assert eq.bands[0].band_type == EqBandType.BELL
+        assert eq.input_gain.value == 0.0
+
+
+class TestMetaDataDeserialization:
+    def test_parse_metadata(self):
+        xml = """
+        <MetaData>
+            <Title>My Song</Title>
+            <Artist>Test Artist</Artist>
+            <Year>2025</Year>
+        </MetaData>
+        """
+        elem = ET.fromstring(xml)
+        meta = MetaData.from_xml(elem)
+
+        assert meta.title == "My Song"
+        assert meta.artist == "Test Artist"
+        assert meta.year == "2025"
+        assert meta.album is None
+
+
+class TestReferenceableIdCounter:
+    """Regression tests for Referenceable.ID counter after deserialization.
+
+    Previously, from_xml did not advance Referenceable.ID when loading
+    objects with explicit id attributes.  After loading id0..id9, the
+    counter remained at 0 and any newly created object would collide
+    with the first deserialized object.
+    """
+
+    def test_id_counter_advances_past_loaded_ids(self):
+        """After deserializing id0..id3 the counter must be >= 4."""
+        xml = """
+        <Project version="1.0">
+            <Application name="Test" version="1.0"/>
+            <Structure>
+                <Track name="Master" id="id0">
+                    <Channel id="id1" role="master" audioChannels="2"/>
+                </Track>
+                <Track name="Bass" id="id2">
+                    <Channel id="id3" role="regular" audioChannels="2" destination="id1"/>
+                </Track>
+            </Structure>
+        </Project>
+        """
+        root = ET.fromstring(xml)
+        Project.from_xml(root)
+
+        assert Referenceable.ID >= 4
+
+    def test_new_object_after_load_gets_unique_id(self):
+        """A newly created Track must not collide with deserialized IDs."""
+        xml = """
+        <Project version="1.0">
+            <Application name="Test" version="1.0"/>
+            <Structure>
+                <Track name="Master" id="id0">
+                    <Channel id="id1" role="master" audioChannels="2"/>
+                </Track>
+                <Track name="Bass" id="id2">
+                    <Channel id="id3" role="regular" audioChannels="2" destination="id1"/>
+                </Track>
+            </Structure>
+        </Project>
+        """
+        root = ET.fromstring(xml)
+        Project.from_xml(root)
+
+        new_track = Track(name="NewTrack")
+        assert new_track.id not in ("id0", "id1", "id2", "id3")
+
+    def test_original_instance_preserved_after_new_creation(self):
+        """Creating new objects must not overwrite deserialized instances."""
+        xml = '<Track name="Master" id="id0"/>'
+        elem = ET.fromstring(xml)
+        Track.from_xml(elem)
+
+        new_track = Track(name="NewTrack")
+        master = Referenceable.get_by_id("id0")
+
+        assert master is not None
+        assert master.name == "Master"
+        assert new_track.id != "id0"
+
+    def test_non_sequential_ids_advance_counter(self):
+        """IDs need not be sequential; counter should pass the highest."""
+        xml_a = '<Track name="A" id="id5"/>'
+        xml_b = '<Track name="B" id="id2"/>'
+        Track.from_xml(ET.fromstring(xml_a))
+        Track.from_xml(ET.fromstring(xml_b))
+
+        assert Referenceable.ID >= 6
+        new_track = Track(name="C")
+        assert new_track.id == "id6"
