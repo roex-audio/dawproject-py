@@ -5,7 +5,7 @@ from lxml import etree as ET
 from dawproject import (
     Project, Application, Transport, Track, Channel,
     Arrangement, Lanes, Clips, Clip, Audio, Notes, Note,
-    Markers, Marker, Points, RealPoint, Send,
+    Markers, Marker, Points, RealPoint, Send, Warps, Warp,
     RealParameter, BoolParameter, TimeSignatureParameter,
     Equalizer, Compressor, EqBand, MetaData,
     ContentType, MixerRole, TimeUnit, Unit, DeviceRole,
@@ -239,6 +239,52 @@ class TestMarkersDeserialization:
         assert len(lanes.lanes[0].markers) == 2
         assert lanes.lanes[0].markers[0].name == "Intro"
         assert lanes.lanes[0].markers[1].name == "Verse"
+
+
+class TestWarpsDeserialization:
+    def test_parse_warps_with_content_time_unit(self):
+        xml = """
+        <Warps contentTimeUnit="seconds" timeUnit="beats">
+            <Audio duration="4.657" sampleRate="44100" channels="1" timeUnit="seconds">
+                <File path="samples/dummy.wav"/>
+            </Audio>
+            <Warp time="0" contentTime="0"/>
+            <Warp time="8" contentTime="4.657"/>
+        </Warps>
+        """
+        elem = ET.fromstring(xml)
+        warps = Warps.from_xml(elem)
+
+        assert warps.content_time_unit == TimeUnit.SECONDS
+        assert warps.time_unit == TimeUnit.BEATS
+        assert isinstance(warps.content, Audio)
+        assert len(warps.events) == 2
+        assert warps.events[0].time == 0
+        assert warps.events[1].content_time == 4.657
+
+    def test_parse_warps_missing_content_time_unit_raises(self):
+        xml = """
+        <Warps timeUnit="beats">
+            <Audio duration="4.657" sampleRate="44100" channels="1" timeUnit="seconds">
+                <File path="samples/dummy.wav"/>
+            </Audio>
+            <Warp time="0" contentTime="0"/>
+            <Warp time="8" contentTime="4.657"/>
+        </Warps>
+        """
+        elem = ET.fromstring(xml)
+        with pytest.raises(ValueError, match="missing required attribute 'contentTimeUnit'"):
+            Warps.from_xml(elem)
+
+    def test_parse_warps_invalid_content_time_unit_raises(self):
+        xml = """
+        <Warps contentTimeUnit="invalid_unit" timeUnit="beats">
+            <Warp time="0" contentTime="0"/>
+        </Warps>
+        """
+        elem = ET.fromstring(xml)
+        with pytest.raises(ValueError):
+            Warps.from_xml(elem)
 
 
 class TestEqualizerDeserialization:

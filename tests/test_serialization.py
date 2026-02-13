@@ -231,3 +231,30 @@ class TestRealPointSerialization:
         assert elem.get("time") == "1.0"
         assert elem.get("value") == "0.5"
         assert elem.get("interpolation") == "linear"
+
+
+class TestWarpsSerialization:
+    def test_warps_with_content_time_unit(self):
+        audio = Audio(
+            sample_rate=44100, channels=1, duration=4.657,
+            file=FileReference(path="samples/dummy.wav"),
+            time_unit=TimeUnit.SECONDS,
+        )
+        warps = Warps(
+            content=audio,
+            content_time_unit=TimeUnit.SECONDS,
+            time_unit=TimeUnit.BEATS,
+            events=[Warp(time=0, content_time=0), Warp(time=8, content_time=4.657)],
+        )
+        elem = warps.to_xml()
+
+        assert elem.tag == "Warps"
+        assert elem.get("contentTimeUnit") == "seconds"
+        assert elem.find("Audio") is not None
+        warp_elems = elem.findall("Warp")
+        assert len(warp_elems) == 2
+
+    def test_warps_to_xml_raises_when_content_time_unit_is_none(self):
+        warps = Warps(content_time_unit=None)
+        with pytest.raises(ValueError, match="content_time_unit is required"):
+            warps.to_xml()

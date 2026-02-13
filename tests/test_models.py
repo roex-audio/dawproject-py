@@ -277,3 +277,19 @@ class TestEnums:
     def test_expression_type_values(self):
         assert ExpressionType.GAIN.value == "gain"
         assert ExpressionType.PAN.value == "pan"
+
+
+class TestWarps:
+    def test_create_warps_with_content_time_unit(self):
+        warps = Warps(content_time_unit=TimeUnit.SECONDS)
+        assert warps.content_time_unit == TimeUnit.SECONDS
+        assert warps.events == []
+        assert warps.content is None
+
+    def test_create_warps_without_content_time_unit(self):
+        warps = Warps()
+        assert warps.content_time_unit is None
+
+    def test_create_warps_with_invalid_content_time_unit_raises(self):
+        with pytest.raises(TypeError, match="content_time_unit must be a TimeUnit"):
+            Warps(content_time_unit="seconds")
