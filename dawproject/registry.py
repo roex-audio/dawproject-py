@@ -103,24 +103,60 @@ def populate_registry():
 
 
 def resolve_timeline(tag_name):
-    """Look up a Timeline subclass by XML tag name."""
+    """Look up a Timeline subclass by XML tag name.
+
+    Returns the class only if it is a subclass of Timeline, otherwise None.
+    """
     populate_registry()
-    return get_class(tag_name)
+    cls = get_class(tag_name)
+    if cls is None:
+        return None
+    from .timeline import Timeline
+    if not issubclass(cls, Timeline):
+        return None
+    return cls
 
 
 def resolve_point(tag_name):
-    """Look up a Point subclass by XML tag name."""
+    """Look up a Point subclass by XML tag name.
+
+    Returns the class only if it is a subclass of Point, otherwise None.
+    """
     populate_registry()
-    return get_class(tag_name)
+    cls = get_class(tag_name)
+    if cls is None:
+        return None
+    from .point import Point
+    if not issubclass(cls, Point):
+        return None
+    return cls
 
 
 def resolve_parameter(tag_name):
-    """Look up a Parameter subclass by XML tag name."""
+    """Look up a Parameter subclass by XML tag name.
+
+    Returns the class only if it is a subclass of Parameter, otherwise None.
+    """
     populate_registry()
-    return get_class(tag_name)
+    cls = get_class(tag_name)
+    if cls is None:
+        return None
+    from .parameter import Parameter
+    if not issubclass(cls, Parameter):
+        return None
+    return cls
 
 
 def resolve_device(tag_name):
-    """Look up a Device subclass by XML tag name."""
+    """Look up a Device subclass by XML tag name.
+
+    Returns the class only if it is a subclass of Device, otherwise None.
+    """
     populate_registry()
-    return get_class(tag_name)
+    cls = get_class(tag_name)
+    if cls is None:
+        return None
+    from .device import Device
+    if not issubclass(cls, Device):
+        return None
+    return cls
