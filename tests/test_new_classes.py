@@ -466,3 +466,71 @@ class TestRegistryDispatch:
 
         assert registry.resolve_timeline("Markers") is Markers
         assert registry.resolve_timeline("markers") is Markers
+
+    def test_resolve_timeline_rejects_non_timeline(self):
+        """resolve_timeline must return None for registered non-Timeline types."""
+        from dawproject import registry
+        registry._TAG_REGISTRY.clear()
+        registry._REGISTRY_POPULATED = False
+        registry.populate_registry()
+
+        # Compressor is a Device, not a Timeline
+        assert registry.resolve_timeline("Compressor") is None
+        # RealParameter is a Parameter, not a Timeline
+        assert registry.resolve_timeline("RealParameter") is None
+        # BoolPoint is a Point, not a Timeline
+        assert registry.resolve_timeline("BoolPoint") is None
+
+    def test_resolve_device_rejects_non_device(self):
+        """resolve_device must return None for registered non-Device types."""
+        from dawproject import registry
+        registry._TAG_REGISTRY.clear()
+        registry._REGISTRY_POPULATED = False
+        registry.populate_registry()
+
+        # Clips is a Timeline, not a Device
+        assert registry.resolve_device("Clips") is None
+        # RealPoint is a Point, not a Device
+        assert registry.resolve_device("RealPoint") is None
+        # BoolParameter is a Parameter, not a Device
+        assert registry.resolve_device("BoolParameter") is None
+
+    def test_resolve_point_rejects_non_point(self):
+        """resolve_point must return None for registered non-Point types."""
+        from dawproject import registry
+        registry._TAG_REGISTRY.clear()
+        registry._REGISTRY_POPULATED = False
+        registry.populate_registry()
+
+        # Lanes is a Timeline, not a Point
+        assert registry.resolve_point("Lanes") is None
+        # Compressor is a Device, not a Point
+        assert registry.resolve_point("Compressor") is None
+        # IntegerParameter is a Parameter, not a Point
+        assert registry.resolve_point("IntegerParameter") is None
+
+    def test_resolve_parameter_rejects_non_parameter(self):
+        """resolve_parameter must return None for registered non-Parameter types."""
+        from dawproject import registry
+        registry._TAG_REGISTRY.clear()
+        registry._REGISTRY_POPULATED = False
+        registry.populate_registry()
+
+        # Notes is a Timeline, not a Parameter
+        assert registry.resolve_parameter("Notes") is None
+        # Plugin is a Device, not a Parameter
+        assert registry.resolve_parameter("Plugin") is None
+        # RealPoint is a Point, not a Parameter
+        assert registry.resolve_parameter("RealPoint") is None
+
+    def test_resolve_unknown_tag_returns_none(self):
+        """All resolve_* functions return None for unregistered tag names."""
+        from dawproject import registry
+        registry._TAG_REGISTRY.clear()
+        registry._REGISTRY_POPULATED = False
+        registry.populate_registry()
+
+        assert registry.resolve_timeline("NonExistent") is None
+        assert registry.resolve_point("NonExistent") is None
+        assert registry.resolve_parameter("NonExistent") is None
+        assert registry.resolve_device("NonExistent") is None
